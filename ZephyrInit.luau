@@ -7329,7 +7329,7 @@ local function NORQ_fake_script() -- Execute.LocalScript
 	local script = Instance.new('LocalScript', Execute)
 
 	script.Parent.MouseButton1Up:Connect(function()
-		sandox.environment.global.loadstring(script.Parent.Parent.TextBox.SourceText.Value)	
+		sandbox.environment.global.loadstring(script.Parent.Parent.TextBox.SourceText.Value)	
 	end)
 end
 coroutine.wrap(NORQ_fake_script)()
