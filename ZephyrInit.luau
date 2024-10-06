@@ -6402,28 +6402,33 @@ function sandbox:initialize()
 	environment.global.getthreadcontext = environment.global.getthreadidentity
 
 	environment.global.getidentity = environment.global.getthreadidentity
+	local identity = 3 -- spoof? cant im sorry
+
+	environment.global.getidentity = environment.global.getthreadidentity
+
+	environment.global.getthreadidentity = function()
+		return identity
+	end
 
 	environment.global.setthreadidentity = function(identity)
-		fake_identity = identity
+		assert(identity ~= nil, "Missing argument #1")
+		assert(typeof(identity) == "number", "Invalid argument #1: Expected valid identity, got ".. typeof(identity))
+		assert(identity > -1, "Invalid argument #1: Expected valid identity, got ".. identity)
+		assert(identity < 9, "Invalid argument #1: Expected valid identity, got ".. identity)
+		getfenv().identity = identity
 	end
+
+	environment.global.setthreadidentity = function() return true end
 
 	environment.global.setidentity = environment.global.setthreadidentity
 	environment.global.setthreadcontext = environment.global.setthreadidentity
 
-	environment.global.WebSocket = function()
-		local wss = {
-			connect = function()
-				return {
-					Send = function() end,
-					Close = function() end,
-					OnMessage = {},
-					OnClose = {}
-				}
-			end
-		}
-		wss.Connect = wss.connect
-		return {Websocket = wss, WebSocket = wss, websocket = wss, webSocket = wss}
+	environment.global.getconnections = function()
+		return {}
 	end
+
+	environment.global.setidentity = environment.global.setthreadidentity
+	environment.global.setthreadcontext = environment.global.setthreadidentity
 
 	environment.global.queueonteleport = environment.global.queue_on_teleport
 
@@ -6848,43 +6853,43 @@ function sandbox:initialize()
 		assert(type(source) == "string", "arg #1 must be type string")
 
 		local s1, val1 = pcall(function()
-			return load("local v1=15;v1+=1;return v1", getfenv())()
+		  return load("local v1=15;v1+=1;return v1", getfenv())()
 		end)
 		local s2, val2 = pcall(function()
-			return load('local v1={"a"};for i, v in v1 do return v end', getfenv())()
+		  return load('local v1={"a"};for i, v in v1 do return v end', getfenv())()
 		end)
-
-
+	
+	
 		local GENV = setmetatable({
-			_G = {},
-			shared = {},
-			game = game,
+		  _G = {},
+		  shared = {},
+		  game = game,
 		}, {
-			__index = function(self, index)
-				return rawget(self, index) or getfenv()[index]
-			end,
-			__newindex = function(self, index, value)
-				rawset(self, index, value)
-			end,
+		  __index = function(self, index)
+			return rawget(self, index) or getfenv()[index]
+		  end,
+		  __newindex = function(self, index, value)
+			rawset(self, index, value)
+		  end,
 		})
 		-- click on live share then my name then unfollow
-
+	
 		local __GET_FAKE_ENV = function()
-			local FAKE_SCRIPT = Instance.new("LocalScript")
-			FAKE_SCRIPT.Name = "yurrgurten"
-
-			return setmetatable({ script = FAKE_SCRIPT }, { __metatable = getmetatable(game), __index = GENV })
+		  local FAKE_SCRIPT = Instance.new("LocalScript")
+		  FAKE_SCRIPT.Name = "yurrgurten"
+	
+		  return setmetatable({ script = FAKE_SCRIPT }, { __metatable = getmetatable(game), __index = GENV })
 		end
-
+	
 		for i, f in pairs(sandbox.environment.global) do 
-			GENV[i] = f
-			getfenv(0)[i] = f
+		  GENV[i] = f
+		  getfenv(0)[i] = f
 		end
-
+	
 		if val1 ~= 16 and val2 ~= "a" then
-			return old(toluau(source), __GET_FAKE_ENV())
+		  return old(toluau(source), __GET_FAKE_ENV())
 		else
-			return old(source, __GET_FAKE_ENV())
+		  return old(source, __GET_FAKE_ENV())
 		end
 	end
 
@@ -7069,7 +7074,7 @@ TextLabel.BorderSizePixel = 0
 TextLabel.Position = UDim2.new(0.296029955, 0, 0, 0)
 TextLabel.Size = UDim2.new(0.367647052, 0, 0.99999994, 0)
 TextLabel.Font = Enum.Font.Gotham
-TextLabel.Text = "Zephyr BETA"
+TextLabel.Text = "Zephyr [FIX 1.1]"
 TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 TextLabel.TextSize = 14.000
 
@@ -7329,7 +7334,7 @@ local function NORQ_fake_script() -- Execute.LocalScript
 	local script = Instance.new('LocalScript', Execute)
 
 	script.Parent.MouseButton1Up:Connect(function()
-		sandbox.environment.global.loadstring(script.Parent.Parent.TextBox.SourceText.Value)	
+		sandbox.environment.global.loadstring(script.Parent.Parent.TextBox.SourceText.Value)()
 	end)
 end
 coroutine.wrap(NORQ_fake_script)()
@@ -7354,7 +7359,7 @@ local function LELYZ_fake_script() -- TextBox.Main
 
 	
 	local settings = {
-		Highlight = true; -- Highlight like you know. Script Text color?
+		Highlight = false; -- Highlight like you know. Script Text color?
 		Lines =true; -- The textbox will have some lines like when you press enter.
 		Scroll = true; -- So if it has alot of lines and that it gets off the screen this will help.
 		HighlightVariables=false;--Highlights the local and global enviorments
